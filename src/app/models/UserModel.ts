@@ -2,7 +2,7 @@ import { BaseModel } from './BaseModel';
 
 interface IUserModelProps {
     id: string;
-    name: string;
+    login: string;
 }
 
 export class UserModel extends BaseModel<IUserModelProps> {

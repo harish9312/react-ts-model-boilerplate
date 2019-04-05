@@ -38,7 +38,7 @@ export class BaseModel<P> {
     //     return this;
     // }
 
-    
+
     static get(id: string, state = store.getState()) {
         let modelState = state.models;
         if (!modelState) {
@@ -83,9 +83,9 @@ export class BaseModel<P> {
     static list(state = store.getState()) {
         return state
             .models
-            .filter(instance => instance.resource === this.resource)
-            .toArray()
-            .reverse();
+            .filter(instance => {
+                return instance.resource === this.resource
+            }).toArray()
     }
 
     static getAllByType(type, state = store.getState()) {

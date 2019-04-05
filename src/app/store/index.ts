@@ -4,9 +4,9 @@ import { applyMiddleware, compose, createStore, Store } from 'redux';
 import { composeWithDevTools } from 'redux-devtools-extension';
 import promise from 'redux-promise-middleware';
 import thunk from 'redux-thunk';
-import { IArgosStore } from '../../../interfaces';
+import { IReduxStore } from '../../../interfaces';
 
-export function configureStore(initialState?): Store<IArgosStore> {
+export function configureStore(initialState?): Store<IReduxStore> {
   let middleware = applyMiddleware(logger);
 
   if (process.env.NODE_ENV !== 'production') {
@@ -17,7 +17,7 @@ export function configureStore(initialState?): Store<IArgosStore> {
   const store = createStore(rootReducer as any, initialState as any,
     composeEnhancers(
       applyMiddleware(...getMiddlewares())
-    )) as Store<IArgosStore>;
+    )) as Store<IReduxStore>;
 
   if (module.hot) {
     module.hot.accept('app/reducers', () => {
