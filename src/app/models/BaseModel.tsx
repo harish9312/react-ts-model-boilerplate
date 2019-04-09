@@ -1,6 +1,12 @@
 import { removeInstance, saveInstance, updateInstance } from '../actions/modelActions';
 import { store } from '../store';
 
+/**
+ * Utility Model to save the instances for different models.
+ * @export
+ * @class BaseModel
+ * @template P
+ */
 export class BaseModel<P> {
     static resource: string;
     resource: string;
@@ -12,13 +18,30 @@ export class BaseModel<P> {
         this.props = props;
     }
 
-    getStoreKey(): string { return `${this.resource}${this.props.id}`; }
+    /**
+     * Returns the concatination of resource name and id.
+     * @param {*} [id]
+     * @returns {string}
+     * @memberof BaseModel
+     */
+    getStoreKey(id?): string { return `${this.resource}${id || this.props.id}`; }
 
+    /**
+     * Creates a new instance for the model which it is called.
+     * @returns {BaseModel<P>}
+     * @memberof BaseModel
+     */
     $save(): BaseModel<P> {
         saveInstance(this, this.getStoreKey(), this.resource);
         return this;
     }
 
+    /**
+     * Updates the instance using the key for the model it is called with new props.
+     * @param {string} [key='']
+     * @returns {BaseModel<P>}
+     * @memberof BaseModel
+     */
     $update(key: string = ''): BaseModel<P> {
         updateInstance(`${key
             ? `${this.resource}${key}`
@@ -26,73 +49,14 @@ export class BaseModel<P> {
         return this;
     }
 
-    $delete(casecade: boolean = true): void {
-        removeInstance(this.getStoreKey());
-    }
 
-    // $saveFiltered(key: string): BaseModel<P> {
-    //     if (!this.validate()) {
-    //         throw Error;
-    //     }
-    //     saveFilteredInstance(this, `${key}${this.props.id}`, key);
-    //     return this;
-    // }
-
-
-    static get(id: string, state = store.getState()) {
-        let modelState = state.models;
-        if (!modelState) {
-            return;
-        }
-        let storeKey: string = `${this.resource}${id}`;
-        return modelState.toJS
-            ? modelState.get(storeKey)
-            : modelState[storeKey];
-    }
-
-    static getAllFormIds(): string[] {
-        const instances = this.list();
-        let ids = [];
-        instances.forEach(instance => {
-            ids.concat(instance.props.id);
-        });
-        return ids;
-    }
-
-    static getBy(reference: string, value: string) {
-        const instances = this.list();
-        return instances.find(instance => {
-            if (instance.props[reference] === value) {
-                return instance;
-            }
-        });
-    }
-
-    static getAllBy(reference: string, value: string) {
-        const instances = this.list();
-        return instances.filter(instance => { return instance.props[reference] === value; });
-    }
-
-    static getFiltered(filterBy: string, state = store.getState()) {
-        return state
-            .models
-            .filter(instance => instance.props.filterBy === filterBy)
-            .toArray();
-    }
-
-    static list(state = store.getState()) {
-        return state
-            .models
-            .filter(instance => {
-                return instance.resource === this.resource
-            }).toArray()
-    }
-
-    static getAllByType(type, state = store.getState()) {
-        const instances = this.list();
-        return instances.filter(instance => { return instance.props.type === type; });
-    }
-
+    /**
+     * Saves all the model instances passed to the function using for loop iteration.
+     * @static
+     * @template T
+     * @param {T[]} instances
+     * @memberof BaseModel
+     */
     static saveAll<T extends BaseModel<{}>>(instances: T[]): void {
         for (let instance of instances) {
             if (!validateObject(instance, this['constraints'])) {
@@ -104,12 +68,74 @@ export class BaseModel<P> {
         });
     }
 
+    /**
+     * Removes the instance from the store for the passed id
+     * @param {string} id
+     * @memberof BaseModel
+     */
+    $delete(id: string): void {
+        removeInstance(this.getStoreKey(id));
+    }
+
+    /**
+     * Returns a single instance using the id passed by user.
+     * @static
+     * @param {string} id
+     * @param {*} [state=store.getState()]
+     * @returns
+     * @memberof BaseModel
+     */
+    static get(id: string, state = store.getState()) {
+        let modelState = state.models;
+        if (!modelState) {
+            return;
+        }
+        let storeKey: string = `${this.resource}${id}`;
+        return modelState.toJS
+            ? modelState.get(storeKey)
+            : modelState[storeKey];
+    }
+
+    /**
+     * Returns a array of instance matching the particular resource name.
+     * @static
+     * @param {*} [state=store.getState()]
+     * @returns
+     * @memberof BaseModel
+     */
+    static list(state = store.getState()) {
+        return state
+            .models
+            .filter(instance => {
+                return instance.resource === this.resource
+            }).toArray()
+    }
+
+    /**
+     * Deletes all the instance for the model it is called.
+     * @static
+     * @param {*} [instances=this.list()]
+     * @memberof BaseModel
+     */
     static deleteAll(instances = this.list()) {
         instances.map(instance => removeInstance(instance.getStoreKey()));
     }
 
-    static deleteAllFiltered<T extends BaseModel<{}>>(instances: T[], filterBy: string): void {
-        instances.map(instance => removeInstance(`${filterBy}${instance.props.id}`));
+    /**
+     * A custom base model function to get a single instance from the matching key and value pair in the modal props.
+     * @static
+     * @param {string} reference
+     * @param {string} value
+     * @returns
+     * @memberof BaseModel
+     */
+    static getBy(reference: string, value: string) {
+        const instances = this.list();
+        return instances.find(instance => {
+            if (instance.props[reference] === value) {
+                return instance;
+            }
+        });
     }
 }
 
